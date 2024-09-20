@@ -1,0 +1,45 @@
+﻿@page "/alert-admin"
+@rendermode InteractiveServer
+@inject IJSRuntime JS
+@implements IAsyncDisposable
+
+<PageTitle>Alert Admin</PageTitle>
+
+<h1>Hello, world!</h1>
+
+<h3>Sample Text</h3>
+
+@if (result is not null)
+{
+    <p style="color: red">@result</p>
+}
+
+@code {
+    public string? result;
+
+    // represents a reference to a js object
+    private IJSObjectReference? jsObjectRef;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        // we dont wanna load it in every time the page refreshes
+        if (firstRender)
+        {
+            jsObjectRef = await JS.InvokeAsync<IJSObjectReference>("import", "./Components/Pages/AlertAdmin.razor.js");
+            result = await jsObjectRef.InvokeAsync<string>("alertAdmin", 10);
+            StateHasChanged();
+            Console.WriteLine(result);
+        }
+    }
+
+
+    async ValueTask IAsyncDisposable.DisposeAsync()
+    {
+        Console.WriteLine("DisposeAsync called for jsObjectRef");
+
+        if (jsObjectRef is not null)
+        {
+            await jsObjectRef.DisposeAsync();
+        }
+    }
+}

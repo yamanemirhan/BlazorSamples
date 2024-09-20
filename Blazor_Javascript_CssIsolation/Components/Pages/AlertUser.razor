@@ -1,0 +1,41 @@
+﻿@page "/alert-user"
+@rendermode InteractiveServer
+@implements IAsyncDisposable
+@inject IJSRuntime JS
+
+<h1>Alert User</h1>
+
+<p>
+    <button id="btn">Click Me!</button>
+</p>
+
+@code {
+    private IJSObjectReference? module;
+    private string? result;
+
+    protected async override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            module = await JS.InvokeAsync<IJSObjectReference>("import",
+                "./Components/Pages/AlertUser.razor.js");
+
+            await module.InvokeVoidAsync("addHandlers");
+        }
+    }
+
+    async ValueTask IAsyncDisposable.DisposeAsync()
+    {
+        try
+        {
+            if (module is not null)
+            {
+                await module.DisposeAsync();
+            }
+        }
+        catch (JSDisconnectedException)
+        {
+            Console.WriteLine("Exception");
+        }
+    }
+}

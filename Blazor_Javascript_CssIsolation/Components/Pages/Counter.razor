@@ -1,0 +1,66 @@
+﻿@page "/counter"
+@rendermode InteractiveServer
+@* inject *@
+@inject IJSRuntime JS
+@implements IAsyncDisposable
+
+<PageTitle>Counter</PageTitle>
+
+<h1>Counter</h1>
+
+<p role="status">Current count: @currentCount</p>
+
+<button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
+<hr />
+
+
+@code {
+    private int currentCount = 0;
+    private static int num = 1;
+
+    // represents a reference to a js object
+    private IJSObjectReference? jsObjectRef;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        // we dont wanna load it in every time the page refreshes
+        if(firstRender)
+        {
+            jsObjectRef = await JS.InvokeAsync<IJSObjectReference>("import", "./Components/Pages/Counter.razor.js");
+            await jsObjectRef.InvokeVoidAsync("logMessage", "hello for the first time");
+        }
+    }
+
+    private async Task IncrementCount()
+    {
+        currentCount++;
+
+        // built-in js functions
+        // await JS.InvokeVoidAsync("console.log", $"Count(build-in): {currentCount}");
+
+        // custom functions: js/script.js
+        // await JS.InvokeVoidAsync("log", $"Count(script): {currentCount}");
+
+        // objects with js
+        Console.WriteLine(new Student());
+        Console.WriteLine();
+        await JS.InvokeVoidAsync("log", new Student());
+    }
+
+
+    public class Student
+    {
+        public string Id { get; set; } = "1";
+        public string Name { get; set; } = "John";
+    }
+
+    async ValueTask IAsyncDisposable.DisposeAsync()
+    {
+        Console.WriteLine("DisposeAsync called for jsObjectRef");
+
+        if(jsObjectRef is not null)
+        {
+            await jsObjectRef.DisposeAsync();
+        }
+    }
+}
